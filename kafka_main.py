@@ -22,8 +22,9 @@ class kafka_t:
             print "consumer read error"
         print 1
         for msg in consumer:
-            print msg
+            print msg.topic, msg.value
         print "Done"
+
 
 if __name__ == '__main__':
     kafka_t().pull()
