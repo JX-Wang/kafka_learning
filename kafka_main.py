@@ -1,5 +1,5 @@
 # usr/bin/enc python
-# encoing:utf-8
+# encoding:utf-8
 """
 for learing kafka
 ===================
@@ -7,6 +7,7 @@ Author @ wangjunxiong
 Date @ 2019/7/19
 """
 from kafka import KafkaConsumer, KafkaProducer
+from time import sleep
 
 
 class kafka_producer:
@@ -26,8 +27,8 @@ class kafka_producer:
 
 class kafka_consumer:
     def __init__(self, topic, server_list):
-        self.bootstrap_sever = "10.245.146.115:9092"
-        self.topic = "ddivide6"
+        self.bootstrap_sever = server_list
+        self.topic = topic
         self.partition = 1
 
     def pull(self):
@@ -35,18 +36,40 @@ class kafka_consumer:
             consumer = KafkaConsumer(self.topic, bootstrap_servers=[self.bootstrap_sever])  # topic->str brokers->list
         except:
             print "consumer read error"
-        print 1
         for msg in consumer:
-            print msg.topic, msg.value
+            yield msg.topic, msg.value
+
+
+class kafka_create_topic:
+    """The best way for creating topic is using kafka shell but not python shell"""
+    def __init__(self):
+        pass
+
+    def create(self):
+        pass
 
 
 class clean_topic:
+    """the same as create topic"""
     def __init__(self):
         pass
 
     def clean(self):
+        pass
+
 
 if __name__ == '__main__':
-    pass
+    topic = "ddivide6"
+    server = "10.245.146.115:9092"
+    msg_content = kafka_consumer(topic=topic, server_list=server).pull()
+    while 1:
+        try:
+            domain = msg_content.next()
+            # 这里可以将domain存文件后读取文件进行探测
+            # 也可以直接调用domain进行探测
+            # 存完文件，或者探测完后，通过while循环再次从生成器中读取发来的的数据
+        except Exception as e:
+            pass  # 没有next表示broker中没有数据，继续监听即可
+
 
 

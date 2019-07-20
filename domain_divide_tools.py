@@ -6,7 +6,7 @@ for dividing domain
 Author @ wangjunxiong
 Date @ 2019/7/20
 """
-
+from kafka_producer import kafka_producer
 
 def divide(listTemp, n):
     for i in range(0, len(listTemp), n):
@@ -54,10 +54,10 @@ if __name__ == '__main__':
         # domains = f.readlines()
         # print domains
         domains = ['A.com', 'B.com', 'C.com', 'D.com', 'E.com', 'F.com', 'G.com', 'H.com', 'I.com', 'J.com', 'K.com', 'S.com']
-        rst = domain_divide(id=1, type="query", blocks=4).bomb(domains)
+        rst = domain_divide(id=1, type="query", blocks=5).bomb(domains)
         # print type(rst), rst  # next(rst)
-        for i in rst:
-            print i
+        for domain in domains:
+            kafka_producer().push(domain)
 
         """
         input
