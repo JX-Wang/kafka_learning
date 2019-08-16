@@ -1,7 +1,7 @@
 # usr/bin/enc python
 # encoing:utf-8
 """
-for learing kafka
+for learing kafka_broker
 ===================
 Author @ wangjunxiong
 Date @ 2019/7/19

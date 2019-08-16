@@ -1,7 +1,7 @@
 # usr/bin/enc python
 # encoding:utf-8
 """
-for learing kafka
+for learing kafka_broker
 ===================
 Author @ wangjunxiong
 Date @ 2019/7/19
@@ -22,7 +22,7 @@ class kafka_producer:
             producer.send(topic=self.topic, value=values)
             producer.flush()
         except Exception as e:
-            print "E kafka producer send data error:", str(e)
+            print "E kafka_broker producer send data error:", str(e)
 
 
 class kafka_consumer:
@@ -41,7 +41,7 @@ class kafka_consumer:
 
 
 class kafka_create_topic:
-    """The best way for creating topic is using kafka shell but not python shell"""
+    """The best way for creating topic is using kafka_broker shell but not python shell"""
     def __init__(self):
         pass
 
