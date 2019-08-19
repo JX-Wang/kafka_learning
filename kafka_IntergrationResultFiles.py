@@ -12,28 +12,48 @@ import time
 ORIGINDICT = 'SOURCE/'
 RSTDICT = "RST/"
 TIMEOUT = 1200
+FREQUENT = 30  # seconds
+
+
 class IntergrationResultFiles:
     def __init__(self):
         pass
 
     def monitor(self):
-        schedule.every(5).minutes.do(self.do())
+        schedule.every(FREQUENT).seconds.do(self.do())
         while True:
             schedule.run_pending()
             time.sleep(1)
         pass
 
     def gettotalnum(self, filename):
+        """
+        TODO: resolve total number
+        :param filename -> str
+        :return: total num -> int
+        """
         filename = str(filename)
-        return filename.index("flag index")  # return total num
+        print filename
+        if not filename:
+            return "Error Empty File Name"
+        else:
+            pass
+        try:
+            filename_mirror = filename[::-1]
+            file_without_md5 = filename_mirror[filename_mirror.index("_") + 1:]
+            total = file_without_md5[:filename_mirror.index("_")]
+            return int(total)  # return total num
+        except Exception as e:
+            return "Fesolve File Name Error", str(e)
 
     def addfiles(self, dirname):
         """
         :param dirname: second floor dir name
         :return: bool:
         """
-        addfilename = RSTDICT + dirname
-        datafileslist = os.listdir(ORIGINDICT+dirname)
+        addfilename = RSTDICT + dirname  # Result dict
+        datafileslist = os.listdir(ORIGINDICT+dirname)  # source dict
+
         with open(addfilename, "w") as f:
             tmp_rst = []
             for datafile in datafileslist:
@@ -46,7 +66,7 @@ class IntergrationResultFiles:
             for d in tmp_rst:
                 f.write(d)
 
-            os.system(":> "+ORIGINDICT+" %s/Done" % dirname)  # mark this file
+            os.system(":> "+ORIGINDICT+" %s/Done" % dirname)  # mark this file, mean this dict has been done
 
             return True
         return False
@@ -85,4 +105,5 @@ class IntergrationResultFiles:
 
 if __name__ == '__main__':
     I = IntergrationResultFiles()
+    I.monitor()
     I.do()
