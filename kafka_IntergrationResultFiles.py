@@ -104,5 +104,6 @@ class IntergrationResultFiles:
 if __name__ == '__main__':
     I = IntergrationResultFiles()
     # I.monitor()
+    # bingo
     I.do()
     # print I.gettotalnum("1566302883_id_01_3_md5")
