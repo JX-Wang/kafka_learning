@@ -130,9 +130,6 @@ class confluent_kafka_creat_topic(object):
         pass
 
 
-
-
-
 def test(name):
     msg = confluent_kafka_consumer(topic="domains", group=2, servers='42.236.61.59:9092', timeout=1, auto_offset_reset='latest').pull()
     print name, " start"

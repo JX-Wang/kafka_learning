@@ -13,18 +13,56 @@ ORIGINDICT = 'SOURCE/'
 RSTDICT = "RST/"
 TIMEOUT = 1200
 FREQUENT = 30  # seconds
+SERVERS = '42.236.61.59:9092'
+IP = '10.0.0.0'  # kafka cluster
+PORT = '8999'
+
+import hashlib
+
+# my python lib
+from confluent_kakfa_tools import confluent_kafka_producer
 
 
 class IntergrationResultFiles:
     def __init__(self):
-        pass
+        """
+        IntergrationResultFiles
+        .. py:function: checking the dic has been created or not
+        """
+        basic_dirs = os.listdir(os.getcwd())
+        if RSTDICT not in basic_dirs:
+            os.mkdir(RSTDICT[:-1])
+        else:
+            pass
+
+    def produce(self, filename):
+        """
+        :param filename:
+        :return: None
+        .. py.function:
+        """
+        file_url = "http://{ip}:{port}/file/{file_name}".format(ip=IP, port=str(PORT),
+                                                                file_name=filename)  # file url
+
+        with open(RSTDICT+filename) as f:
+            domain_data = f.read()
+            file_md5 = hashlib.md5(domain_data.encode("utf-8")).hexdigest()
+
+        post_body = {
+            "id": filename,
+            "time": time.time(),
+            "file_url": file_url,
+            "file_md5": file_md5
+        }
+
+        p = confluent_kafka_producer(topic="post-pkg", servers=SERVERS, timeout=1)
+        p.push(value=post_body)
 
     def monitor(self):
         schedule.every(FREQUENT).seconds.do(self.do)
         while True:
             schedule.run_pending()
             time.sleep(1)
-        pass
 
     def gettotalnum(self, filename):
         """
@@ -43,7 +81,7 @@ class IntergrationResultFiles:
             total = file_without_md5[:file_without_md5.index("_")][::-1]
             return int(total)  # return total num
         except Exception as e:
-            return "Fesolve File Name Error", str(e)
+            return "Resolve File Name Error", str(e)
 
     def addfiles(self, dirname):
         """
@@ -51,10 +89,10 @@ class IntergrationResultFiles:
         :return: bool:
         """
         addfilename = RSTDICT + dirname  # Result dict
-        datafileslist = os.listdir(ORIGINDICT+dirname)  # source dict
+        datafileslist = os.listdir(ORIGINDICT + dirname)  # source dict
 
         try:
-            f = open(addfilename, "w")
+            f = open(addfilename, "w+")
             tmp_rst = []
             for datafile in datafileslist:
                 try:
@@ -62,21 +100,23 @@ class IntergrationResultFiles:
                     data = f_tmp.read()
                     tmp_rst.append(data)
                 except Exception as e:
-                    raise str(e)
+                    print str(e)
             for d in tmp_rst:
                 f.write(d)
+                f.write("\n")
 
-            os.system(":> "+ORIGINDICT+" %s/Done" % dirname)  # mark this file, mean this dict has been done
+            self.produce(dirname)  # kafka producer publish rst json data
+
+            os.system(":> "+ORIGINDICT+"%s/Done" % dirname)  # mark this file, mean this dict has been done
         except Exception as e:
+            print e
             return "AddFile Error", str(e)
 
     def do(self):
-        # print os.getcwd()
         msg = os.listdir(ORIGINDICT)
         for dirname in msg:
             dict_name = ORIGINDICT + dirname
             rst = os.listdir(dict_name)
-
             if "Done" in rst:  # means this SOURCE has been finished
                 continue
 
@@ -84,21 +124,17 @@ class IntergrationResultFiles:
 
             if total_num == len(rst):  # if this task done
                 self.addfiles(dirname)  #
-
             else:
                 # open this SOURCE and check time !
-                filelist = os.listdir(dict_name)
-                filelist.sort(key=lambda x: int(x[:10]))
-                final_filename = filelist[0]
-                timestart = os.path.getctime(final_filename)  # get file create time / not fit for windows_sys
-                print timestart
+                rst.sort(key=lambda x: int(x[:15]))
+                final_filename = rst[0]
+                timestart = os.path.getctime(dict_name+"/"+final_filename)  # get file create time / not fit for windows_sys
                 timenow = time.time()
-                print timenow
                 if timenow - timestart >= 1200:
-                    self.addfiles(dict_name)
+                    self.addfiles(dirname)  # SOURCE/00/
                 else:
                     pass
-        print "Done"
+        # Done
 
 
 if __name__ == '__main__':
