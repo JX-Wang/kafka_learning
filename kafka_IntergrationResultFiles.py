@@ -3,7 +3,8 @@
 Integration result files
 ========================
 Author @ Wangjunxiong
-Date @ 2019.8.13
+TBegin @ 2019.8.13
+TheEnd @ 2019.8.22
 """
 
 import os
@@ -13,24 +14,33 @@ ORIGINDICT = 'SOURCE/'
 RSTDICT = "RST/"
 TIMEOUT = 1200
 FREQUENT = 30  # seconds
+PRODUCER_RETRY_TIMES = 3  # Max retry time 3
 SERVERS = '42.236.61.59:9092'  # kafka cluster broker config
 IP = '10.0.0.0'  # local ip
 PORT = '8999'  # port
 
 import hashlib
 
-# my python lib
+# Third party python lib
 from confluent_kakfa_tools import confluent_kafka_producer
 
 
 class IntergrationResultFiles:
-    def __init__(self):
+    """
+    IntergrationResultFiles
+    This class is for gathering all the data files in a single file which named by it's task id
+    :param str ORIGINDICT: original dict
+    :param str RSTDICT: Final Task dict, every file contains total data
+    :rtype None
+    :return None
+    """
+    def __init__(self, ORIGINDICT=ORIGINDICT, RSTDICT=RSTDICT):
         """
         IntergrationResultFiles
-        .. py:function: checking the dic has been created or not
+        .. py: __init__ function: checking the dict has been created or not
         """
         basic_dirs = os.listdir(os.getcwd())
-        if RSTDICT not in basic_dirs:
+        if RSTDICT[:-1] not in basic_dirs:
             os.mkdir(RSTDICT[:-1])
         else:
             pass
@@ -38,8 +48,7 @@ class IntergrationResultFiles:
     def produce(self, filename):
         """
         :param filename:
-        :return: None
-        .. py.function:
+        :return: bool:
         """
         file_url = "http://{ip}:{port}/file/{file_name}".format(ip=IP, port=str(PORT),
                                                                 file_name=filename)  # file url
@@ -54,9 +63,12 @@ class IntergrationResultFiles:
             "file_url": file_url,
             "file_md5": file_md5
         }
-
-        p = confluent_kafka_producer(topic="post-pkg", servers=SERVERS, timeout=1)
-        p.push(value=post_body)
+        try:
+            p = confluent_kafka_producer(topic="post-pkg", servers=SERVERS, timeout=1)
+            p.push(value=post_body)
+        except Exception as e:
+            return "Producer Error", str(e)
+        return True
 
     def monitor(self):
         schedule.every(FREQUENT).seconds.do(self.do)
@@ -66,7 +78,6 @@ class IntergrationResultFiles:
 
     def gettotalnum(self, filename):
         """
-        TODO: resolve total number
         :param filename -> str
         :return: total num -> int
         """
@@ -105,8 +116,11 @@ class IntergrationResultFiles:
                 f.write(d)
                 f.write("\n")
 
-            self.produce(dirname)  # kafka producer publish rst json data
-
+            for i in range(PRODUCER_RETRY_TIMES):  # Max retry time 3
+                if self.produce(dirname):  # kafka producer publish rst json data
+                    break
+                else:
+                    pass
             os.system(":> "+ORIGINDICT+"%s/Done" % dirname)  # mark this file, mean this dict has been done
         except Exception as e:
             print e
@@ -130,7 +144,7 @@ class IntergrationResultFiles:
                 final_filename = rst[0]
                 timestart = os.path.getctime(dict_name+"/"+final_filename)  # get file create time / not fit for windows_sys
                 timenow = time.time()
-                if timenow - timestart >= 1200:
+                if timenow - timestart >= TIMEOUT:
                     self.addfiles(dirname)  # SOURCE/00/
                 else:
                     pass
@@ -140,6 +154,6 @@ class IntergrationResultFiles:
 if __name__ == '__main__':
     I = IntergrationResultFiles()
     I.monitor()
-    # bingo
+    # Are you ok ?
     # I.do()
     # print I.gettotalnum("1566302883_id_01_3_md5")
