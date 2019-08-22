@@ -140,7 +140,7 @@ class IntergrationResultFiles:
                 self.addfiles(dirname)  #
             else:
                 # open this SOURCE and check time !
-                rst.sort(key=lambda x: int(x[:15]))
+                rst.sort(key=lambda x: int(x[:14]))
                 final_filename = rst[0]
                 timestart = os.path.getctime(dict_name+"/"+final_filename)  # get file create time / not fit for windows_sys
                 timenow = time.time()
@@ -153,7 +153,7 @@ class IntergrationResultFiles:
 
 if __name__ == '__main__':
     I = IntergrationResultFiles()
-    I.monitor()
+    # I.monitor()
     # Are you ok ?
-    # I.do()
-    # print I.gettotalnum("1566302883_id_01_3_md5")
+    I.do()
+    # print I.gettotalnum("20190822172409_id_01_3_md5")
