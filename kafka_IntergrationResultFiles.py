@@ -13,9 +13,9 @@ ORIGINDICT = 'SOURCE/'
 RSTDICT = "RST/"
 TIMEOUT = 1200
 FREQUENT = 30  # seconds
-SERVERS = '42.236.61.59:9092'
-IP = '10.0.0.0'  # kafka cluster
-PORT = '8999'
+SERVERS = '42.236.61.59:9092'  # kafka cluster broker config
+IP = '10.0.0.0'  # local ip
+PORT = '8999'  # port
 
 import hashlib
 
