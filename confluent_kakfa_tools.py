@@ -140,6 +140,7 @@ def test(name):
             value = msg.next()
             print name, value
         except Exception as e:
+            return str(e)
             pass
 
 
