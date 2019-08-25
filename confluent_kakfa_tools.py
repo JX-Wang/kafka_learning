@@ -131,7 +131,9 @@ class confluent_kafka_creat_topic(object):
 
 
 def test(name):
-    msg = confluent_kafka_consumer(topic="domains", group=2, servers='42.236.61.59:9092', timeout=1, auto_offset_reset='latest').pull()
+    msg = confluent_kafka_consumer(topic="f2-18-98-21-e4-37", group=2,
+                                   servers='10.245.146.146:9092,10.245.146.148:9092,10.245.146.159:9092',
+                                   timeout=1, auto_offset_reset='latest').pull()
     print name, " start"
     while 1:
         try:
