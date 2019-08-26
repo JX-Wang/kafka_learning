@@ -17,7 +17,7 @@ import threading
 from confluent_kakfa_tools import confluent_kafka_producer
 from read_config import *
 from saving_domain_dns import monitor_kafka_data
-from compare_data import *
+from compare_data import compare_data
 from Logger import Logger
 show_terminal = read_log_show()
 logger = Logger(file_path='./query_log/', show_terminal=show_terminal)
@@ -162,7 +162,7 @@ class IntergrationResultFiles:
                     pass
             os.system(":> "+ORIGIN_DICT+"%s/Done" % dir_name)  # mark this file, mean this dict has been done
         except Exception as e:
-            logger.logger.error("AddFile Error", str(e))
+            # logger.logger.error("AddFile Error", str(e))
             return
 
     def do(self):
@@ -200,8 +200,8 @@ if __name__ == '__main__':
     logger.logger.info("IntergrationResultFiles threading start")
     task2 = threading.Thread(target=monitor_kafka_data, name="monitor_kafka_data")
     task2.start()
-    logger.logger.info("monitor_kafka_data threading start")
-    task3 = threading.Thread(target=)
+    logger.logger.info("compare_data threading start")
+    task3 = threading.Thread(target=compare_data().monitor, name="compare_data")
     task3.start()
     logger.logger.info("IntergrationResultFiles threading start")
-    logger.logger.info("Respond Server Monitor System Beginning 0_-")
+    logger.logger.info("Respond Server Monitor System Beginning ^_^")
