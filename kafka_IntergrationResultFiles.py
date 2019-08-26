@@ -204,4 +204,4 @@ if __name__ == '__main__':
     task3 = threading.Thread(target=)
     task3.start()
     logger.logger.info("IntergrationResultFiles threading start")
-    logger.logger.info("Respond Server Monitor System Beginning ^_^")
+    logger.logger.info("Respond Server Monitor System Beginning 0_-")
