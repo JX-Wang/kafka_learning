@@ -193,7 +193,7 @@ class IntergrationResultFiles:
 
 if __name__ == '__main__':
     # Are you ok ?
-    # I.do()
+    # I.do()  #
     # print I.gettotalnum("20190822172409_id_01_3_md5")
     task1 = threading.Thread(target=IntergrationResultFiles().monitor, name="IntergrationResultFiles")
     task1.start()
