@@ -55,7 +55,7 @@ if __name__ == '__main__':
         # domains = f.readlines()
         # print domains
         domains = ['A.com', 'B.com', 'C.com', 'D.com', 'E.com', 'F.com', 'G.com', 'H.com', 'I.com', 'J.com', 'K.com', 'S.com']
-        rst = domain_divide(id=1, type="query", blocks=5).bomb(domains)
+        rst = domain_divide(id=1, type="query_task", blocks=5).bomb(domains)
         # print type(rst), rst  # next(rst)
         for domain in domains:
             kafka_producer().push(domain)
@@ -63,13 +63,13 @@ if __name__ == '__main__':
         """
         input
         domains = ['A.com', 'B.com', 'C.com', 'D.com', 'E.com', 'F.com', 'G.com', 'H.com', 'I.com', 'J.com', 'K.com', 'S.com']
-        rst = domain_divide(id=1, type="query", blocks=4).bomb(domains)
+        rst = domain_divide(id=1, type="query_task", blocks=4).bomb(domains)
         
         output 
-        ['A.com', 'B.com', 'C.com', 1, 'query']
-        ['D.com', 'E.com', 'F.com', 1, 'query']
-        ['G.com', 'H.com', 'I.com', 1, 'query']
-        ['J.com', 'K.com', 'S.com', 1, 'query']
+        ['A.com', 'B.com', 'C.com', 1, 'query_task']
+        ['D.com', 'E.com', 'F.com', 1, 'query_task']
+        ['G.com', 'H.com', 'I.com', 1, 'query_task']
+        ['J.com', 'K.com', 'S.com', 1, 'query_task']
         """
 
 

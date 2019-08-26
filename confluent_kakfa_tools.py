@@ -12,7 +12,7 @@ zookeeper/kafka IP
 topics: 
     dnsrst: partitions 1
     post-pkg: partitions 1
-    query-task: partitions 5
+    query_task-task: partitions 5
     sec-task: partitions 5
     test: partitions 3
 """
