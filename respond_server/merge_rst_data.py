@@ -4,7 +4,8 @@ Integration result files
 ========================
 Author @ Wangjunxiong
 TBegin @ 2019.8.13
-TheEnd @ 2019.8.22
+TheEnd @ 2019.8.22 1.0
+TheEnd @ 2019.8.27 2.0
 """
 
 import os
@@ -23,14 +24,13 @@ show_terminal = read_log_show()
 logger = Logger(file_path='./query_log/', show_terminal=show_terminal)
 SERVERS = read_confluent_kafka()  # kafka cluster broker config
 IP, PORT = read_http_server()  # local ip & port
-ORIGIN_DICT = 'domain_dns_data/'
+ORIGIN_DICT = './domain_dns_data/'
 QUERY_TASK = "query/"
 QUERY_TASK_MERGED = "query_merged/"
 SEC_TASK = "sec/"
 SEC_TASK_MERGED = "sec_merged/"
 SEC_TASK_COMPARED = "sec_compared/"
 
-RSTDICT = "RST/"
 TIMEOUT = 1200
 FREQUENT = 10  # seconds
 PRODUCER_RETRY_TIMES = 3  # Max retry time 3
@@ -45,14 +45,31 @@ class IntergrationResultFiles:
     :rtype None
     :return None
     """
-    def __init__(self, ORIGIN_DICT=ORIGIN_DICT, RSTDICT=RSTDICT):
+    def __init__(self, ORIGIN_DICT=ORIGIN_DICT, RSTDICT=None):
         """
         IntergrationResultFiles
-        .. py: __init__ function: checking the dict has been created or not
+        .. py: __init__ function: checking the dict has been created or not, create those folder if not exists
         """
-        basic_dirs = os.listdir(os.getcwd())
-        if RSTDICT[:-1] not in basic_dirs:
-            os.mkdir(RSTDICT[:-1])
+        query_folder = os.path.exists(ORIGIN_DICT+QUERY_TASK)
+        if not query_folder:
+            os.mkdir(ORIGIN_DICT+QUERY_TASK)
+
+        sec_folder = os.path.exists(ORIGIN_DICT+SEC_TASK)
+        if not sec_folder:
+            os.mkdir(ORIGIN_DICT+SEC_TASK)
+
+        sec_merged_folder = os.path.exists(ORIGIN_DICT + SEC_TASK_MERGED)
+        if not sec_merged_folder:
+            os.mkdir(ORIGIN_DICT + SEC_TASK_MERGED)
+
+        query_merged_folder = os.path.exists(ORIGIN_DICT + QUERY_TASK_MERGED)
+        if not query_merged_folder:
+            os.mkdir(ORIGIN_DICT + QUERY_TASK_MERGED)
+
+        sec_compared_folder = os.path.exists(ORIGIN_DICT + SEC_TASK_COMPARED)
+        if not sec_compared_folder:
+            os.mkdir(ORIGIN_DICT + SEC_TASK_COMPARED)
+
         else:
             pass
 
@@ -75,21 +92,22 @@ class IntergrationResultFiles:
         """
         merge_file_dict, task_id = self.resolve_dict_task_id(dir_name)
 
-        file_url = "http://{ip}:{port}/file/{file_name}".format(ip=IP, port=str(PORT),
-                                                                file_name=task_id)  # file url
+        file_url = "http://{ip}:{port}/file_/{file_name}".format(ip=IP, port=str(PORT),
+                                                                file_name=merge_file_dict+task_id)  # file url
 
         print file_url
 
-        with open(ORIGIN_DICT+dir_name) as f:
+        with open(ORIGIN_DICT+merge_file_dict+task_id) as f:
             domain_data = f.read()
             file_md5 = hashlib.md5(domain_data.encode("utf-8")).hexdigest()
 
+        task_type = dir_name.replace('/'+task_id, '')
         post_body = {
             "id": task_id,
             "time": time.time(),
             "file_url": file_url,
             "file_md5": file_md5,
-            "task_type": merge_file_dict
+            "task_type": task_type
         }
 
         try:
@@ -154,47 +172,78 @@ class IntergrationResultFiles:
             for d in tmp_rst:
                 f.writelines(d)
                 f.writelines("\n")
-
-            for i in range(PRODUCER_RETRY_TIMES):  # Max retry time 3
-                if self.produce(dir_name):  # kafka producer publish rst json data
-                    break
-                else:
-                    pass
-            os.system(":> "+ORIGIN_DICT+"%s/Done" % dir_name)  # mark this file, mean this dict has been done
         except Exception as e:
-            # logger.logger.error("AddFile Error", str(e))
+            logger.logger.error("AddFile Error", str(e))
             return
 
     def do(self):
         msg = [QUERY_TASK, SEC_TASK]
         for dir_name in msg:
-            # print "doing ", dir_name
-            id_dict = os.listdir(ORIGIN_DICT + dir_name[:-1])
-            for task_id in id_dict:
-                task_files = os.listdir(ORIGIN_DICT+dir_name+task_id)
-                if "Done" in task_files:  # means this SOURCE has been finished
-                    continue
-                total_num = self.get_total_num(task_files[0])  # get the total files num
+            if dir_name == QUERY_TASK:  # dealing with query task
+                id_dict = os.listdir(ORIGIN_DICT + dir_name[:-1])
+                for task_id in id_dict:
+                    task_files = os.listdir(ORIGIN_DICT+dir_name+task_id)
+                    if "Done" in task_files:  # means this SOURCE has been finished
+                        continue
+                    total_num = self.get_total_num(task_files[0])  # get the total files num
 
-                if total_num >= len(task_files):  # if this task done
-                    self.merge_files(dir_name+task_id)  #
-                else:
-                    # open this SOURCE and check time !
-                    task_files.sort(key=lambda x: int(x[:14]))
-                    final_filename = task_files[0]
-                    time_start = os.path.getctime(ORIGIN_DICT+dir_name+task_id+"/"+final_filename)  # get file create time / not fit for windows_sys
-                    time_now = time.time()
-                    if time_now - time_start >= TIMEOUT:
-                        self.merge_files(dir_name=dir_name+task_id)
+                    if total_num >= len(task_files):  # if this task done
+                        self.merge_files(dir_name=dir_name+task_id)  #
+                        for i in range(PRODUCER_RETRY_TIMES):  # Max retry time 3
+                            if self.produce(dir_name=dir_name+task_id):  # kafka producer publish rst json data
+                                break
+                            else:
+                                pass
+                            # mark this file, mean this dict has been done
+                        os.system(
+                            ":> " + ORIGIN_DICT + "%s/Done" % dir_name)
+
                     else:
-                        pass
+                        # open this SOURCE and check time !
+                        task_files.sort(key=lambda x: int(x[:14]))
+                        final_filename = task_files[0]
+                        # get file create time / not fit for windows_sys
+                        time_start = os.path.getctime(ORIGIN_DICT+dir_name+task_id+"/"+final_filename)
+                        time_now = time.time()
+                        if time_now - time_start >= TIMEOUT:
+                            self.merge_files(dir_name=dir_name+task_id)
+                            for i in range(PRODUCER_RETRY_TIMES):  # Max retry time 3
+                                if self.produce(dir_name + task_id):  # kafka producer publish rst json data
+                                    break
+                                else:
+                                    pass
+                                # mark this file, mean this dict has been done
+                            os.system(
+                                ":> " + ORIGIN_DICT + "%s/Done" % dir_name)
+                        else:
+                            pass
+            # dealing with sec task
+            else:
+                id_dict = os.listdir(ORIGIN_DICT + dir_name[:-1])
+                for task_id in id_dict:
+                    task_files = os.listdir(ORIGIN_DICT + dir_name + task_id)
+                    if "Done" in task_files:  # means this SOURCE has been finished
+                        continue
+                    total_num = self.get_total_num(task_files[0])  # get the total files num
+
+                    if total_num >= len(task_files):  # if this task done
+                        self.merge_files(dir_name=dir_name + task_id)  #
+                    else:
+                        # open this SOURCE and check time !
+                        task_files.sort(key=lambda x: int(x[:14]))
+                        final_filename = task_files[0]
+                        time_start = os.path.getctime(
+                            ORIGIN_DICT + dir_name + task_id + "/" + final_filename)  # get file create time / not fit for windows_sys
+                        time_now = time.time()
+                        if time_now - time_start >= TIMEOUT:
+                            self.merge_files(dir_name=dir_name + task_id)
+                        else:
+                            pass
+
         # Done
 
 
 if __name__ == '__main__':
-    # Are you ok ?
-    # I.do()  #
-    # print I.gettotalnum("20190822172409_id_01_3_md5")
     task1 = threading.Thread(target=IntergrationResultFiles().monitor, name="IntergrationResultFiles")
     task1.start()
     logger.logger.info("IntergrationResultFiles threading start")
@@ -205,3 +254,7 @@ if __name__ == '__main__':
     task3.start()
     logger.logger.info("IntergrationResultFiles threading start")
     logger.logger.info("Respond Server Monitor System Beginning 0_-")
+
+
+
+
