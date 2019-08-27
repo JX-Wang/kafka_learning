@@ -199,7 +199,7 @@ class IntergrationResultFiles:
                             ":> " + ORIGIN_DICT + "%s/Done" % dir_name)
 
                     else:
-                        # open this SOURCE and check time !
+                        # open the SOURCE file and check time !
                         task_files.sort(key=lambda x: int(x[:14]))
                         final_filename = task_files[0]
                         # get file create time / not fit for windows_sys
