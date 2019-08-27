@@ -31,7 +31,7 @@ SEC_TASK = "sec/"
 SEC_TASK_MERGED = "sec_merged/"
 SEC_TASK_COMPARED = "sec_compared/"
 
-TIMEOUT = 1200
+TIMEOUT = 1200  # global time out
 FREQUENT = 10  # seconds
 PRODUCER_RETRY_TIMES = 3  # Max retry time 3
 
