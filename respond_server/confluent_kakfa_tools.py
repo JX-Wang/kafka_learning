@@ -36,7 +36,10 @@ class confluent_kafka_producer(object):
         self.servers = servers
         self.timeout = timeout
         parma = {
-            'bootstrap.servers':self.servers
+            'bootstrap.servers': self.servers,
+            'fetch.message.max.bytes': 104857600,
+            'max.partition.fetch.bytes': 104857600,
+            'message.max.bytes': 104857600
         }
         self.confluent_producer = Producer(parma)
 
@@ -82,7 +85,8 @@ class confluent_kafka_consumer(object):
         self.topic = topic
         if group:
             self.group = str(group)
-        else:self.group = None
+        else:
+            self.group = None
         self.servers = servers
         self.timeout = timeout
         self.auto_offset_reset = auto_offset_reset  # earliest
@@ -98,7 +102,9 @@ class confluent_kafka_consumer(object):
         parma = {
             'bootstrap.servers': self.servers,
             'group.id': self.group,
-           # 'auto_offset_reset': self.auto_offset_reset
+            'fetch.message.max.bytes': 104857600,
+            'max.partition.fetch.bytes': 104857600,
+            'message.max.bytes': 104857600
         }
         confluent_consumer = ""
         try:
@@ -122,11 +128,13 @@ class confluent_kafka_consumer(object):
 
 if __name__ == '__main__':
     # pass
-    servers = '10.245.146.221:9092,10.245.146.231:9092,10.245.146.232:9092'
-    msg = confluent_kafka_consumer(topic="test", group=1, servers=servers, timeout=1, auto_offset_reset='latest').pull()
+    # servers = '10.245.146.221:9092,10.245.146.231:9092,10.245.146.232:9092'
+    servers = "42.236.61.59:9092"
+    msg = confluent_kafka_consumer(topic="test", group=1, servers=servers, timeout=5, auto_offset_reset='latest').pull()
 
     while 1:
         try:
+            print "consumer start"
             value = msg.next()
             print value
         except Exception as e:
@@ -135,7 +143,11 @@ if __name__ == '__main__':
 
 
     # servers = '10.245.146.221:9092,10.245.146.231:9092,10.245.146.232:9092'
+    # servers = "42.236.61.59:9092"
     # p = confluent_kafka_producer(topic="test", servers=servers, timeout=0)
-    # while True:
-    #      for data in range(10):
-    #          p.push(value=data)
+    # # while True:
+    # #      for data in range(10):
+    # #          p.push(value=data)
+    # with open("TMP/domains", 'r') as f:
+    #     domains = f.read()
+    #     p.push(value=domains)
